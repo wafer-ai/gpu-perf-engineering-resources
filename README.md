@@ -72,7 +72,7 @@ Recommended reading order:
 
 #### Tier 1
 
-- [Programming Massively Parallel Processors (PMPP)](https://www.elsevier.com/books/programming-massively-parallel-processors/hwu/978-0-323-91231-0) - Hwu, Kirk, El Hajj. The canonical textbook, 4th edition covers Ampere/Hopper
+- [Programming Massively Parallel Processors (PMPP)](https://www.elsevier.com/books/programming-massively-parallel-processors/hwu/978-0-323-91231-0) - Hwu, Kirk, El Hajj. The canonical textbook, 5th edition covers Ampere/Hopper/Blackwell
 - [GPU Mode Lectures](https://github.com/gpu-mode/lectures) - Community-driven lecture series: profiling → kernels → CUTLASS → SASS. Active Discord (23k+ members): [discord.gg/gpumode](https://discord.gg/gpumode)
 - [NVIDIA CUDA Programming Guide](https://docs.nvidia.com/cuda/cuda-programming-guide/) - Official documentation, essential reference for programming model
 
