@@ -103,7 +103,7 @@ Recommended reading order:
 - [How to Optimize a CUDA Matmul Kernel for cuBLAS-like Performance](https://siboehm.com/articles/22/CUDA-MMM) - siboehm. The canonical starting tutorial. Covers tiling, shared memory, vectorized loads
 - [Inside NVIDIA GPUs: Anatomy of High-Performance Matmul Kernels](https://www.aleksagordic.com/blog/matmul) - Aleksa Gordić. 47 figures. Covers PTX/SASS, wave quantization, ILP, roofline model, warp tiling
 - [Outperforming cuBLAS on H100: A Worklog](https://cudaforfun.substack.com/p/outperforming-cublas-on-h100-a-worklog) - cudaforfun. Real optimization journey using WGMMA and TMA
-- [Fast CUDA GEMM with Tensor Cores](https://github.com/lezcano/gemm) - lezcano. Practical tensor core implementation
+- [CUDA GEMM Optimization](https://github.com/leimao/CUDA-GEMM-Optimization) - Lei Mao. FP32 and FP16 GEMM kernels from naive to near-cuBLAS, with Tensor Core support and Nsight Compute profiling
 
 ### Advanced implementations
 
@@ -190,7 +190,7 @@ Recommended reading order:
 
 #### Tier 2
 
-- [Learn CUTLASS the Hard Way](https://leimao.github.io/article/Learn-CUTLASS-The-Hard-Way/) - Lei Mao. Naive GEMM → real CUTLASS progression
+- [Build and Develop CUTLASS CUDA Kernels](https://leimao.github.io/blog/Build-Develop-CUTLASS-CUDA-Kernels/) - Lei Mao. End-to-end CUTLASS and CuTe kernel development with CMake, Docker, and Nsight Compute profiling
 - [CUTLASS Tutorial: GEMM Kernel Design with Pipelining](https://research.colfax-intl.com/cutlass-tutorial-design-of-a-gemm-kernel/) - Colfax Research. Warp specialization, producer-consumer patterns
 - [NVIDIA CUTLASS](https://github.com/NVIDIA/cutlass) - CUDA Templates for Linear Algebra Subroutines
 - [cuTile (CUDA Tile)](https://github.com/NVIDIA/cutile-python) - New tile-level programming model in CUDA 13.1
@@ -342,6 +342,11 @@ Recommended reading order:
 - [Automatic Horizontal Fusion for GPU Kernels](https://www.cs.toronto.edu/ecosystem/papers/CGO_22/Horizontal_Fusion.pdf) - CMU. 12-55% speedup via parallel kernel execution
 
 ## The Big Picture
+
+### Industry analysis
+
+- [MI300X vs H100 vs H200: CUDA Moat Still Alive](https://newsletter.semianalysis.com/p/mi300x-vs-h100-vs-h200-benchmark-part-1-training) - SemiAnalysis. Independent 5-month benchmarking of AMD vs NVIDIA for training, quantifying the software ecosystem gap
+- [How the Economics of Inference Can Maximize AI Value](https://blogs.nvidia.com/blog/ai-inference-economics/) - NVIDIA. Inference cost trends: 280-fold decline in 2 years, 30% annual hardware cost reduction, 40% energy efficiency improvement
 
 ### Practitioner blogs
 
