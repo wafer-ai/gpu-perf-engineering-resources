@@ -1,367 +1,303 @@
 <p align="center">
-  <img src="cover.avif" alt="Performance Engineering for AI Infra" width="100%">
+  <img src="cover.avif" alt="AI Performance Engineering" width="100%">
 </p>
 
-# Learning Guide: Performance Engineering for AI Infra
+# AI Performance Engineering
 
-## Purpose
+A curated resource list for learning GPU performance engineering and production inference.
 
-The purpose of this guide is to help engineers learn GPU kernel programming and optimization, with a focus on high-performance AI systems. It covers the full journey from fundamentals to production deployment, balancing foundational concepts with cutting-edge techniques.
+The list is ordered from a single inference request to a single GPU, optimized kernels, inference engines, and distributed systems. Read **Start here** first. After that, use it as a reference.
 
-If you're interested in GPU performance engineering - [we're hiring at Wafer](https://wafer.ai).
+The core list uses original papers, official specifications and documentation, creator repositories, and direct implementation work.
 
-## How to read
+If you work on these problems, [Wafer is hiring](https://wafer.ai).
 
-Recommended reading order:
+## Contents
 
-1. Read "Tier 1" for all topics
-2. Read "Tier 2" for all topics
-3. Etc
-
-## Table of contents
-
-- [Fundamentals](#fundamentals)
-  - [Introduction to GPU programming](#introduction-to-gpu-programming)
-  - [Architecture deep dives](#architecture-deep-dives)
-  - [Low-level details](#low-level-details)
-- [Matrix Multiplication](#matrix-multiplication)
-  - [Essential tutorials](#essential-tutorials)
-  - [Advanced implementations](#advanced-implementations)
-  - [cuBLAS internals](#cublas-internals)
-- [Tensor Cores & Mixed Precision](#tensor-cores--mixed-precision)
-  - [Tensor core fundamentals](#tensor-core-fundamentals)
-  - [Precision formats](#precision-formats)
-  - [Blackwell-specific](#blackwell-specific)
-- [Attention & Memory-Bound Kernels](#attention--memory-bound-kernels)
-  - [FlashAttention](#flashattention)
-  - [PagedAttention & serving](#pagedattention--serving)
-  - [KV cache optimization](#kv-cache-optimization)
-- [Compiler & DSL Approaches](#compiler--dsl-approaches)
+- [Start here: the minimum mental model](#start-here-the-minimum-mental-model)
+- [1. GPU fundamentals](#1-gpu-fundamentals)
+  - [Programming model](#programming-model)
+  - [Compilation and machine code](#compilation-and-machine-code)
+- [2. Kernel optimization](#2-kernel-optimization)
+  - [Foundational kernel exercises](#foundational-kernel-exercises)
+  - [Matrix multiplication](#matrix-multiplication)
+  - [Direct implementation work](#direct-implementation-work)
+  - [Tensor cores and low precision](#tensor-cores-and-low-precision)
+  - [Attention](#attention)
+- [3. Programming models and profiling](#3-programming-models-and-profiling)
   - [Triton](#triton)
-  - [CUTLASS & CuTe](#cutlass--cute)
-  - [Other DSLs](#other-dsls)
-- [Profiling & Optimization](#profiling--optimization)
-  - [NVIDIA tools](#nvidia-tools)
-  - [Optimization techniques](#optimization-techniques)
-  - [Advanced topics](#advanced-topics)
-- [AMD & Alternative Hardware](#amd--alternative-hardware)
-  - [ROCm fundamentals](#rocm-fundamentals)
-  - [CDNA architecture](#cdna-architecture)
-  - [TPU & others](#tpu--others)
-- [Production Inference Systems](#production-inference-systems)
-  - [Core systems](#core-systems)
-  - [Continuous batching](#continuous-batching)
+  - [CUTLASS, CuTe, and CUDA Tile](#cutlass-cute-and-cuda-tile)
+  - [Other hardware stacks](#other-hardware-stacks)
+  - [Profiling, benchmarking, and correctness](#profiling-benchmarking-and-correctness)
+- [4. Inference engines](#4-inference-engines)
+  - [Scheduling and continuous batching](#scheduling-and-continuous-batching)
+  - [KV cache systems](#kv-cache-systems)
+  - [Quantization](#quantization)
   - [Speculative decoding](#speculative-decoding)
-- [LLM-Generated Kernels](#llm-generated-kernels)
-  - [Benchmarks & models](#benchmarks--models)
-  - [Agentic approaches](#agentic-approaches)
-  - [Research papers](#research-papers)
-- [Distributed & Multi-GPU](#distributed--multi-gpu)
-  - [Communication primitives](#communication-primitives)
-  - [Parallelism strategies](#parallelism-strategies)
-  - [Kernel fusion](#kernel-fusion)
-- [The Big Picture](#the-big-picture)
-  - [Industry analysis](#industry-analysis)
-  - [Practitioner blogs](#practitioner-blogs)
-  - [Communities](#communities)
-- [Maintainer](#maintainer)
+  - [Structured decoding and fairness](#structured-decoding-and-fairness)
+  - [Long context and multimodal inference](#long-context-and-multimodal-inference)
+- [5. Distributed inference](#5-distributed-inference)
+  - [Parallelism, collectives, and topology](#parallelism-collectives-and-topology)
+  - [Mixture-of-experts serving](#mixture-of-experts-serving)
+  - [Prefill and decode disaggregation](#prefill-and-decode-disaggregation)
+  - [Production systems](#production-systems)
+  - [Serving benchmarks](#serving-benchmarks)
+- [6. Current hardware](#6-current-hardware)
+  - [NVIDIA](#nvidia)
+  - [AMD](#amd)
+  - [Google TPU](#google-tpu)
+  - [AWS Trainium](#aws-trainium)
+- [Frontier](#frontier)
+  - [AI-generated kernels](#ai-generated-kernels)
+  - [Watchlist](#watchlist)
+- [Source policy](#source-policy)
 
-## Fundamentals
+## Start here: the minimum mental model
 
-### Introduction to GPU programming
+Read these in order if you are new to the field.
 
-#### Tier 1
+1. [How to Scale Your Model: Inference](https://jax-ml.github.io/scaling-book/inference/) - One request from prefill through decode, with batching, KV memory, and parallelism.
+2. [Attention Is All You Need](https://arxiv.org/abs/1706.03762) - The transformer computation that the rest of the list optimizes.
+3. [CUDA C++ basics](https://docs.nvidia.com/cuda/cuda-programming-guide/02-basics/intro-to-cuda-cpp.html) - The shortest official introduction to the CUDA execution model.
+4. [Programming Massively Parallel Processors](https://www.elsevier.com/books/programming-massively-parallel-processors/hwu/978-0-323-91231-0) - The main textbook for GPU programming, memory, and kernel design.
+5. [Roofline: An Insightful Visual Performance Model](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2008/EECS-2008-134.html) - The compute, memory-bandwidth, and arithmetic-intensity model.
+6. [Transformer Inference Arithmetic](https://kipply.github.io/blog/transformer-inference-arithmetic/) - FLOPs, parameter bytes, KV bytes, and communication for transformer inference.
+7. [Efficiently Scaling Transformer Inference](https://proceedings.mlsys.org/paper_files/paper/2023/file/c4be71ab8d24cdfb45e3d06dbfca2780-Paper-mlsys2023.pdf) - Latency, memory, and parallelism costs for large-model inference.
+8. [Etalon](https://arxiv.org/html/2407.07000) - TTFT, TPOT, goodput, and latency SLOs for generative-model serving.
 
-- [Programming Massively Parallel Processors (PMPP)](https://www.elsevier.com/books/programming-massively-parallel-processors/hwu/978-0-323-91231-0) - Hwu, Kirk, El Hajj. The canonical textbook, 5th edition covers Ampere/Hopper/Blackwell
-- [GPU Mode Lectures](https://github.com/gpu-mode/lectures) - Community-driven lecture series: profiling → kernels → CUTLASS → SASS. Active Discord (23k+ members): [discord.gg/gpumode](https://discord.gg/gpumode)
-- [NVIDIA CUDA Programming Guide](https://docs.nvidia.com/cuda/cuda-programming-guide/) - Official documentation, essential reference for programming model
+For a practical companion, use the [GPU Mode lectures](https://github.com/gpu-mode/lectures).
 
-### Architecture deep dives
+## 1. GPU fundamentals
 
-#### Tier 2
+### Programming model
 
-- [NVIDIA Hopper Architecture In-Depth](https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/) - TMA, Thread Block Clusters, Distributed Shared Memory, WGMMA
-- [Chips and Cheese: Blackwell](https://chipsandcheese.com/p/blackwell-nvidias-massive-gpu) - Microbenchmarking analysis of GB202, memory latency comparisons
-- [Dissecting the NVIDIA Hopper GPU Architecture](https://arxiv.org/abs/2402.13499) - Academic microbenchmarking of H100
-- [Dissecting the NVIDIA Blackwell Architecture](https://arxiv.org/abs/2507.10789) - Microbenchmarks covering tcgen05, TMEM, 2SM MMA
+- [CUDA Programming Guide](https://docs.nvidia.com/cuda/cuda-programming-guide/) - The normative CUDA reference.
+- [CUDA programming model](https://docs.nvidia.com/cuda/cuda-programming-guide/01-introduction/programming-model.html) - Threads, warps, blocks, grids, and the memory hierarchy.
+- [CUDA C++ Best Practices Guide](https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/) - Coalescing, shared memory, occupancy, synchronization, and optimization workflow.
+- [Hopper Tuning Guide](https://docs.nvidia.com/cuda/hopper-tuning-guide/) - TMA, thread-block clusters, asynchronous execution, and Hopper-specific limits.
+- [Blackwell Tuning Guide](https://docs.nvidia.com/cuda/blackwell-tuning-guide/) - Tensor memory, Blackwell execution features, and architecture limits.
 
-### Low-level details
+### Compilation and machine code
 
-#### Tier 3
+- [NVCC Compiler Driver](https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/) - The CUDA compilation trajectory and artifact controls.
+- [PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/) - NVIDIA's virtual instruction set and memory model.
+- [CUDA Binary Utilities](https://docs.nvidia.com/cuda/cuda-binary-utilities/) - `cuobjdump` and `nvdisasm` for inspecting GPU binaries.
+- [Understanding PTX](https://developer.nvidia.com/blog/understanding-ptx-the-assembly-language-of-cuda-gpu-computing/) - NVIDIA's introduction to the role of PTX between CUDA and machine code.
 
-- [PTX ISA Documentation](https://docs.nvidia.com/cuda/parallel-thread-execution/) - Official PTX instruction set reference
-- [Understanding PTX](https://developer.nvidia.com/blog/understanding-ptx-the-assembly-language-of-cuda-gpu-computing) - Introduction to CUDA's virtual assembly language
-- [DocumentSASS](https://github.com/0xD0GF00D/DocumentSASS) - Unofficial SASS instruction documentation extracted from nvdisasm
-- [JEB SASS Disassembler](https://www.pnfsoftware.com/blog/reversing-nvidia-cuda-sass-code/) - Reverse engineering GPU binaries (Volta → Blackwell)
+## 2. Kernel optimization
 
-## Matrix Multiplication
+### Foundational kernel exercises
 
-### Essential tutorials
+- [Efficient Matrix Transpose in CUDA C/C++](https://developer.nvidia.com/blog/efficient-matrix-transpose-cuda-cc/) - Coalescing, shared-memory tiling, and bank conflicts.
+- [Optimizing Parallel Reduction in CUDA](https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf) - Synchronization, divergence, occupancy, and instruction cost.
+- [Single-pass Parallel Prefix Scan with Decoupled Look-back](https://research.nvidia.com/sites/default/files/pubs/2016-03_Single-pass-Parallel-Prefix/nvr-2016-002.pdf) - A work-efficient scan with one pass over memory.
+- [Online Normalizer Calculation for Softmax](https://arxiv.org/abs/1805.02867) - Numerically stable online softmax without materialized intermediates.
 
-#### Tier 1
+### Matrix multiplication
 
-- [How to Optimize a CUDA Matmul Kernel for cuBLAS-like Performance](https://siboehm.com/articles/22/CUDA-MMM) - siboehm. The canonical starting tutorial. Covers tiling, shared memory, vectorized loads
-- [Inside NVIDIA GPUs: Anatomy of High-Performance Matmul Kernels](https://www.aleksagordic.com/blog/matmul) - Aleksa Gordić. 47 figures. Covers PTX/SASS, wave quantization, ILP, roofline model, warp tiling
-- [Outperforming cuBLAS on H100: A Worklog](https://cudaforfun.substack.com/p/outperforming-cublas-on-h100-a-worklog) - cudaforfun. Real optimization journey using WGMMA and TMA
+- [Benchmarking GPUs to Tune Dense Linear Algebra](https://mc.stanford.edu/cgi-bin/images/6/65/SC08_Volkov_GPU.pdf) - The canonical case for reasoning from measured hardware behavior instead of occupancy alone.
+- [CuTe GEMM tutorial](https://docs.nvidia.com/cutlass/latest/media/docs/cpp/cute/0x_gemm_tutorial.html) - Tiling, layouts, copies, and matrix-multiply atoms.
+- [CUTLASS 3.x design](https://docs.nvidia.com/cutlass/latest/media/docs/cpp/cutlass_3x_design.html) - The collective and kernel structure used by modern CUTLASS.
+- [DeepGEMM](https://github.com/deepseek-ai/DeepGEMM) - A compact production FP8 GEMM implementation for Hopper.
 
-### Advanced implementations
+### Direct implementation work
 
-#### Tier 2
+- [How to Optimize a CUDA Matmul Kernel for cuBLAS-like Performance](https://siboehm.com/articles/22/CUDA-MMM) - A matrix multiplication built from naive CUDA through shared-memory and register tiling.
+- [Inside NVIDIA GPUs: Anatomy of High-Performance Matmul Kernels](https://www.aleksagordic.com/blog/matmul) - Layouts, tiling, PTX, machine code, and roofline analysis.
+- [Outperforming cuBLAS on H100: A Worklog](https://cudaforfun.substack.com/p/outperforming-cublas-on-h100-a-worklog) - A direct Hopper optimization worklog using tensor cores and asynchronous movement.
+- [CUTLASS Tutorial: Mastering TMA](https://research.colfax-intl.com/tutorial-hopper-tma/) - Working kernels built around the Tensor Memory Accelerator.
 
-- [Advanced Matrix Multiplication Optimization](https://salykova.github.io/sgemm-gpu) - salykova. Detailed optimization techniques following CUTLASS approach
-- [CUDA Matrix Multiplication Optimization](https://leimao.github.io/article/CUDA-Matrix-Multiplication-Optimization/) - Lei Mao. Systematic optimization progression
-- [Optimizing SGEMV for cuBLAS-like Performance](https://maharshi.bearblog.dev/optimizing-sgemv-cuda/) - Maharshi. Matrix-vector multiplication optimization worklog
-- [DeepGEMM](https://github.com/deepseek-ai/DeepGEMM) - DeepSeek. Clean FP8 GEMM implementation for Hopper, ~300 lines
+### Tensor cores and low precision
 
-### cuBLAS internals
+- [OCP 8-bit Floating Point Specification](https://www.opencompute.org/documents/ocp-8-bit-floating-point-specification-ofp8-revision-1-1-final-pdf) - E4M3 and E5M2 formats.
+- [OCP Microscaling Formats Specification](https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf) - Shared-scale MX formats.
+- [NVIDIA Transformer Engine](https://github.com/NVIDIA/TransformerEngine) - FP8 and FP4 transformer execution with scaling controls.
+- [Blackwell matrix multiply instructions](https://docs.nvidia.com/cutlass/latest/media/docs/pythonDSL/mma_docs/tcgen05_programming.html) - `tcgen05`, tensor memory, and Blackwell MMA programming.
 
-#### Tier 3
+### Attention
 
-- [New cuBLAS 12.0 Features](https://developer.nvidia.com/blog/new-cublas-12-0-features-and-matrix-multiplication-performance-on-nvidia-hopper-gpus/) - Hopper-specific optimizations and performance
-- [cuBLAS 12.9 Floating Point Emulation](https://developer.nvidia.com/blog/boosting-matrix-multiplication-speed-and-flexibility-with-nvidia-cublas-12-9/) - FP32 emulation with BF16 tensor cores
+- [FlashAttention](https://arxiv.org/abs/2205.14135) - IO-aware exact attention.
+- [FlashAttention-2](https://arxiv.org/abs/2307.08691) - Better work partitioning and parallelism.
+- [FlashAttention-3](https://arxiv.org/abs/2407.08608) - Asynchronous movement and tensor-core overlap on Hopper.
+- [FlashAttention-4](https://proceedings.mlsys.org/paper_files/paper/2026/file/ae8b0b5838ba510daff1198474e7b984-Paper-Conference.pdf) - The Blackwell attention schedule.
+- [FlashInfer](https://github.com/flashinfer-ai/flashinfer) - Attention and related kernels for serving workloads.
 
-## Tensor Cores & Mixed Precision
-
-### Tensor core fundamentals
-
-#### Tier 1
-
-- [NVIDIA Tensor Core Evolution: Volta to Blackwell](https://semianalysis.com/2025/06/23/nvidia-tensor-core-evolution-from-volta-to-blackwell/) - SemiAnalysis. Comprehensive evolution: WMMA → MMA → WGMMA → tcgen05
-- [Deep Dive on Hopper TMA Unit for FP8 GEMMs](https://pytorch.org/blog/hopper-tma-unit/) - PyTorch. TMA programming model and FP8 integration
-- [CUTLASS Tutorial: Mastering TMA](https://research.colfax-intl.com/tutorial-hopper-tma/) - Colfax Research. Tensor Memory Accelerator programming
-
-### Precision formats
-
-#### Tier 2
-
-- [Introducing FP8 for Efficient AI Training](https://developer.nvidia.com/blog/floating-point-8-an-introduction-to-efficient-lower-precision-ai-training/) - NVIDIA. E4M3 vs E5M2 formats, scaling strategies
-- [Introducing NVFP4 for Low-Precision Inference](https://developer.nvidia.com/blog/introducing-nvfp4-for-efficient-and-accurate-low-precision-inference/) - NVIDIA. Blackwell FP4 with microscaling (MXFP4)
-- [NVIDIA Transformer Engine](https://github.com/NVIDIA/TransformerEngine) - Library for FP8/FP4 training and inference
-- [Per-Tensor and Per-Block Scaling for FP8](https://developer.nvidia.com/blog/per-tensor-and-per-block-scaling-strategies-for-effective-fp8-training/) - NVIDIA. Scaling strategies for quantization
-
-### Blackwell-specific
-
-#### Tier 3
-
-- [Matrix Multiplication on Blackwell: Part 1](https://www.modular.com/blog/matrix-multiplication-on-nvidias-blackwell-part-1-introduction) - Modular. tcgen05, TMEM, 2SM MMA programming
-- [Blackwell Pipelining with CuTeDSL](https://www.linkedin.com/posts/simon-veitner-174a681b6_blackwell-pipelining-with-cutedsl-activity-7409301467171328000-bTPv) - Simon Veitner. Blog post on advanced Blackwell kernel patterns
-
-## Attention & Memory-Bound Kernels
-
-### FlashAttention
-
-#### Tier 1
-
-- [FlashAttention: Fast and Memory-Efficient Attention](https://arxiv.org/abs/2205.14135) - Dao et al. Original paper: IO-aware exact attention
-- [FlashAttention-2](https://arxiv.org/abs/2307.08691) - Dao. Better parallelization, work partitioning
-- [FlashAttention-3: Fast and Accurate Attention with Asynchrony](https://arxiv.org/abs/2407.08608) - Dao et al. Hopper-specific: warp specialization, WGMMA pipelining
-- [A Case Study in CUDA Kernel Fusion: FlashAttention-2 on Hopper](https://arxiv.org/abs/2312.11918) - Jay Shah et al. CUTLASS implementation details
-
-### PagedAttention & serving
-
-#### Tier 2
-
-- [Efficient Memory Management for LLM Serving with PagedAttention](https://arxiv.org/abs/2309.06180) - vLLM team. Virtual memory for KV cache
-- [FlashInfer](https://github.com/flashinfer-ai/flashinfer) - Kernel library for LLM serving (MLSys 2025 Best Paper). PagedAttention, FlashAttention-3, MLA support
-- [Accelerating Self-Attentions with FlashInfer](https://flashinfer.ai/2024/02/02/introduce-flashinfer.html) - Architecture and design decisions
-
-### KV cache optimization
-
-#### Tier 3
-
-- [Mastering LLM Techniques: Inference Optimization](https://developer.nvidia.com/blog/mastering-llm-techniques-inference-optimization/) - NVIDIA. Comprehensive guide: GQA, MQA, KV cache compression
-- [GQA: Training Generalized Multi-Query Transformer Models](https://arxiv.org/abs/2305.13245) - Google. Grouped Query Attention for memory efficiency
-- [Multi-Head Latent Attention (MLA)](https://arxiv.org/abs/2405.04434) - DeepSeek. Low-rank KV compression, 8x cache reduction
-- [A Survey on LLM Acceleration based on KV Cache Management](https://arxiv.org/abs/2412.19442) - Comprehensive taxonomy of KV cache techniques
-
-## Compiler & DSL Approaches
+## 3. Programming models and profiling
 
 ### Triton
 
-#### Tier 1
+- [Triton paper](https://eecs.harvard.edu/~htk/publication/2019-mapl-tillet-kung-cox.pdf) - The original blocked-program language and compiler design.
+- [Triton programming guide](https://triton-lang.org/main/programming-guide/chapter-1/introduction.html) - The official programming model.
+- [Triton repository](https://github.com/triton-lang/triton) - Compiler, examples, tests, and backend implementation.
 
-- [Introducing Triton](https://openai.com/index/triton) - OpenAI. Original announcement and motivation
-- [Triton Language](https://github.com/triton-lang/triton) - Development repository
-- [Deep Dive into Triton Internals (Parts 1-3)](https://www.kapilsharma.dev/posts/deep-dive-into-triton-internals/) - Kapil Sharma. Compiler pipeline: Python → MLIR → PTX → CUBIN
-- [GPU Mode: Triton Internals Talk](https://www.kapilsharma.dev/posts/gpu-mode-triton-internals-talk/) - Kapil Sharma. Video + slides from the lecture
+### CUTLASS, CuTe, and CUDA Tile
 
-### CUTLASS & CuTe
+- [CuTe layout algebra](https://docs.nvidia.com/cutlass/latest/media/docs/cpp/cute/02_layout_algebra.html) - Layouts and layout composition.
+- [CUTLASS GEMM tutorial](https://docs.nvidia.com/cutlass/latest/media/docs/cpp/cute/0x_gemm_tutorial.html) - A GEMM expressed through CuTe layouts and atoms.
+- [CUTLASS pipeline documentation](https://docs.nvidia.com/cutlass/latest/media/docs/cpp/pipeline.html) - Producer-consumer pipelines and asynchronous stages.
+- [CUDA Tile IR programming model](https://docs.nvidia.com/cuda/tile-ir/latest/sections/prog_model.html) - NVIDIA's compiler-owned tile abstraction.
+- [CUDA Tile repository](https://github.com/NVIDIA/cuda-tile) - The current implementation and examples.
 
-#### Tier 2
+### Other hardware stacks
 
-- [Learn CUTLASS the Hard Way](https://leimao.github.io/article/Learn-CUTLASS-The-Hard-Way/) - Lei Mao. Naive GEMM → real CUTLASS progression
-- [CUTLASS Tutorial: GEMM Kernel Design with Pipelining](https://research.colfax-intl.com/cutlass-tutorial-design-of-a-gemm-kernel/) - Colfax Research. Warp specialization, producer-consumer patterns
-- [NVIDIA CUTLASS](https://github.com/NVIDIA/cutlass) - CUDA Templates for Linear Algebra Subroutines
-- [cuTile (CUDA Tile)](https://github.com/NVIDIA/cutile-python) - New tile-level programming model in CUDA 13.1
+- [ROCm Composable Kernel](https://github.com/ROCm/composable_kernel) - AMD tiling, layout, and operator primitives.
+- [ROCm AITER](https://github.com/ROCm/aiter) - AMD inference and transformer operator implementations.
+- [HipKittens](https://github.com/HazyResearch/HipKittens) - A tile abstraction for AMD GPUs.
+- [Pallas design](https://docs.jax.dev/en/latest/pallas/design/design.html) - The JAX kernel model for GPU and TPU backends.
+- [NKI programming model](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/nki/programming_model.html) - The tile-level programming model for AWS NeuronCore hardware.
 
-### Other DSLs
+### Profiling, benchmarking, and correctness
 
-#### Tier 3
+- [Nsight Systems User Guide](https://docs.nvidia.com/nsight-systems/UserGuide/) - System timelines, CPU-GPU interaction, and distributed traces.
+- [Nsight Compute Profiling Guide](https://docs.nvidia.com/nsight-compute/ProfilingGuide/) - Kernel metrics, sections, replay, and roofline analysis.
+- [Compute Sanitizer](https://docs.nvidia.com/compute-sanitizer/ComputeSanitizer/) - Memory, race, initialization, and synchronization checks.
+- [CUTLASS GEMM measurement methodology](https://docs.nvidia.com/cutlass/latest/media/docs/cpp/gemm_performance_measurement_methodology_guidelines.html) - Reproducible GEMM benchmarking.
+- [ROCm Compute Profiler](https://rocm.docs.amd.com/projects/rocprofiler-compute/en/latest/) - AMD performance counters and roofline analysis.
 
-- [TileLang](https://github.com/tile-ai/tilelang) - Composable tiled programming, 1075x speedup over PyTorch on H100
-- [ThunderKittens](https://github.com/HazyResearch/ThunderKittens) - Stanford Hazy Research. DSL for writing fast GPU kernels
-- [Apache TVM](https://tvm.apache.org/) - End-to-end ML compiler with auto-tuning (Ansor)
-- [MLIR GPU Dialect](https://mlir.llvm.org/) - Compiler infrastructure for heterogeneous compute
-- [Mojo](https://www.modular.com/mojo) - MLIR-based language targeting GPU/CPU, SIMD-first design
+## 4. Inference engines
 
-## Profiling & Optimization
+### Scheduling and continuous batching
 
-### NVIDIA tools
+- [Orca](https://www.usenix.org/conference/osdi22/presentation/yu) - Iteration-level scheduling for autoregressive serving.
+- [PagedAttention and vLLM](https://arxiv.org/html/2309.06180) - Paged KV allocation and continuous batching.
+- [Sarathi-Serve](https://www.usenix.org/system/files/osdi24-agrawal.pdf) - Chunked prefills that reduce interference with decode.
+- [SGLang](https://arxiv.org/html/2312.07104) - Prefix reuse, structured programs, and a serving runtime.
+- [vLLM](https://github.com/vllm-project/vllm), [SGLang](https://github.com/sgl-project/sglang), and [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM) - The main production engine implementations.
 
-#### Tier 1
+### KV cache systems
 
-- [Nsight Compute Roofline Analysis](https://developer.nvidia.com/blog/accelerating-hpc-applications-with-nsight-compute-roofline-analysis/) - NVIDIA. Roofline modeling for bottleneck analysis
-- [CUDA Occupancy Calculator](https://developer.nvidia.com/blog/cuda-pro-tip-occupancy-api-simplifies-launch-configuration/) - NVIDIA. `cudaOccupancyMaxActiveBlocksPerMultiprocessor` API
-- [Hopper Tuning Guide](https://docs.nvidia.com/cuda/hopper-tuning-guide/) - Official optimization guide for H100
+- [Grouped-Query Attention](https://arxiv.org/abs/2305.13245) - Fewer key-value heads and a smaller KV cache.
+- [DeepSeek-V2](https://arxiv.org/abs/2405.04434) - Multi-head latent attention and compressed KV state.
+- [KIVI](https://proceedings.mlr.press/v235/liu24bz.html) - KV quantization with separate treatment for keys and values.
+- [CacheGen](https://cs.stanford.edu/~keithw/sigcomm2024/sigcomm24-final1571-acmpaginated.pdf) - KV compression for transfer.
+- [Mooncake](https://www.usenix.org/conference/fast25/presentation/qin) - A distributed KV cache and data plane.
 
-### Optimization techniques
+### Quantization
 
-#### Tier 2
-
-- [Memory Coalescing and Bank Conflicts](https://medium.com/@dhanushg295/mastering-cuda-matrix-multiplication-an-introduction-to-shared-memory-tile-memory-coalescing-and-d7979499b9c5) - Shared memory optimization, padding tricks
-- [Understanding CUDA Occupancy](https://medium.com/@manisharadwad/unlocking-gpu-potential-understanding-and-optimizing-cuda-occupancy-2f43ee01ad7e) - Thread block configuration
-- [The Roofline Model](https://docs.nersc.gov/tools/performance/roofline/) - NERSC. Arithmetic intensity, compute vs memory bound
-- [Understanding the Top-K CUDA Kernel with PTX](https://blog.alpindale.net/posts/top_k_cuda/) - alpindale. 10x speedup over torch.topk, PTX-level optimization
-
-### Advanced topics
-
-#### Tier 3
-
-- [CUDA Graphs for Reduced Launch Overhead](https://developer.nvidia.com/blog/cuda-graphs/) - NVIDIA. Batch kernel launches, 5x speedup for small kernels
-- [Kernel Batching with CUDA Graphs](https://arxiv.org/abs/2501.09398) - Optimal batch sizes (50-100 nodes), 1.4x improvement
-- [Warp Specialization in PyTorch](https://pytorch.org/blog/warp-specialization/) - Producer-consumer patterns, async execution
-- [Tawa: Automatic Warp Specialization](https://arxiv.org/abs/2510.14719) - Matches FlashAttention-3 performance with less effort
-
-## AMD & Alternative Hardware
-
-### ROCm fundamentals
-
-#### Tier 1
-
-- [Developing Triton Kernels on AMD GPUs](https://rocm.blogs.amd.com/artificial-intelligence/triton/README.html) - AMD ROCm Blog. Triton for MI300X
-- [Triton Kernel Optimizations on AMD](https://rocm.blogs.amd.com/software-tools-optimization/kernel-development-optimizations-with-triton-on-/README.html) - AMD ROCm Blog. Performance tuning for CDNA
-- [HipKittens](https://github.com/HazyResearch/HipKittens) - ThunderKittens for AMD. Tile programming abstraction for MI300X
-
-### CDNA architecture
-
-#### Tier 2
-
-- [Chips and Cheese: AMD CDNA 3](https://chipsandcheese.com) - MI300X architecture analysis, chiplet design
-- [Chips and Cheese: RDNA 4](https://chipsandcheese.com/p/amds-rdna4-gpu-architecture-at-hot) - Dynamic register allocation, cache strategies
-- [AMD RDNA 3 Microbenchmarking](https://chipsandcheese.com/p/microbenchmarking-amds-rdna-3-graphics-architecture) - Chips and Cheese
-
-### TPU & others
-
-#### Tier 3
-
-- [The Rise of Pallas: Custom TPU Kernels](https://towardsdatascience.com/the-rise-of-pallas-unlocking-tpu-potential-with-custom-kernels-67be10ab846a/) - Towards Data Science. JAX Pallas for TPU programming
-- [vLLM TPU: Unified JAX Backend](https://blog.vllm.ai/2025/10/16/vllm-tpu.html) - vLLM Blog. 20% throughput improvement via JAX primitives
-- [Building Production AI on Cloud TPUs with JAX](https://docs.cloud.google.com/tpu/docs/jax-ai-stack) - Google
-
-## Production Inference Systems
-
-### Core systems
-
-#### Tier 1
-
-- [vLLM](https://github.com/vllm-project/vllm) - PagedAttention, continuous batching, high throughput
-- [SGLang](https://github.com/sgl-project/sglang) - RadixAttention, structured generation, prefix caching
-- [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM) - NVIDIA's optimized inference library
-- [Accelerating Transformers with cuDNN 9](https://developer.nvidia.com/blog/accelerating-transformers-with-nvidia-cudnn-9/) - NVIDIA. Fused attention, Graph API
-
-### Continuous batching
-
-#### Tier 2
-
-- [Orca: Distributed Serving with Iteration-Level Scheduling](https://www.usenix.org/conference/osdi22/presentation/yu) - OSDI 2022. Original continuous batching paper, 36.9x throughput
-- [Continuous Batching from First Principles](https://huggingface.co/blog/continuous_batching) - Hugging Face. Clear explanation of dynamic batching
-- [Achieve 23x LLM Inference Throughput](https://www.anyscale.com/blog/continuous-batching-llm-inference) - Anyscale. vLLM performance analysis
+- [GPTQ](https://arxiv.org/abs/2210.17323) - One-shot second-order weight quantization.
+- [SmoothQuant](https://proceedings.mlr.press/v202/xiao23c.html) - W8A8 execution by moving quantization difficulty from activations into weights.
+- [AWQ](https://proceedings.mlsys.org/paper_files/paper/2024/file/42a452cbafa9dd64e9ba4aa95cc1ef21-Paper-Conference.pdf) - Low-bit weight-only inference with salient-weight protection.
 
 ### Speculative decoding
 
-#### Tier 3
+- [Fast Inference from Transformers via Speculative Decoding](https://proceedings.mlr.press/v202/leviathan23a.html) - Exact sampling with a draft model.
+- [Accelerating Large Language Model Decoding with Speculative Sampling](https://arxiv.org/abs/2302.01318) - The parallel formulation and analysis.
+- [Medusa](https://arxiv.org/html/2401.10774) - Multiple prediction heads on the target model.
+- [EAGLE](https://proceedings.mlr.press/v235/li24bt.html) - Feature-level drafting.
 
-- [Medusa: Simple Framework for Accelerating LLM Generation](https://github.com/FasterDecoding/Medusa) - Multiple heads for parallel draft tokens
-- [EAGLE: Speculative Sampling with Draft Model](https://github.com/SafeAILab/EAGLE) - Autoregressive draft prediction
-- [Speculative Decoding Overview](https://docs.vllm.ai) - vLLM Docs. Implementation in vLLM
+### Structured decoding and fairness
 
-## LLM-Generated Kernels
+- [Guiding LLMs the Right Way](https://proceedings.mlr.press/v235/beurer-kellner24a.html) - Constrained decoding without changing the intended token distribution.
+- [XGrammar](https://proceedings.mlsys.org/paper_files/paper/2025/file/5c20ca4b0b20b0bd2f1d839dc605e70f-Paper-Conference.pdf) - A fast grammar engine for structured generation.
+- [Fairness in Serving Large Language Models](https://arxiv.org/html/2401.00588) - Fair scheduling when request sizes are different and unknown.
 
-### Benchmarks & models
+### Long context and multimodal inference
 
-#### Tier 1
+- [Ring Attention](https://arxiv.org/abs/2310.01889) - Exact distributed attention by circulating KV blocks around a device ring.
+- [MInference 1.0](https://arxiv.org/abs/2407.02490) - Dynamic sparse patterns for long-context prefill on existing models.
+- [Native Sparse Attention](https://arxiv.org/abs/2502.11089) - A model trained with a hardware-aligned sparse attention hierarchy.
+- [vLLM multimodal inputs](https://docs.vllm.ai/en/latest/features/multimodal_inputs.html) - Current engine support for text, image, audio, and video inputs.
 
-- [KernelBench: Can LLMs Write Efficient GPU Kernels?](https://arxiv.org/abs/2502.10517) - Stanford. 250 PyTorch workloads, fast_p metric
-- [KernelLLM](https://huggingface.co/facebook/KernelLLM) - Meta. 8B model trained on 25k PyTorch→Triton pairs, beats GPT-4o
-- [TritonBench](https://arxiv.org/abs/2502.14752) - 184 real-world Triton operators from GitHub
+## 5. Distributed inference
 
-### Agentic approaches
+### Parallelism, collectives, and topology
 
-#### Tier 2
+- [Megatron-LM](https://arxiv.org/abs/1909.08053) - Tensor and pipeline parallelism for transformer models.
+- [NCCL](https://github.com/NVIDIA/nccl) - NVIDIA's collective communication implementation.
+- [Multi-node NVLink Systems Tuning Guide](https://docs.nvidia.com/multi-node-nvlink-systems/multi-node-tuning-guide/) - NVLink and InfiniBand topology in GB200 NVL systems.
+- [UALink 1.0 Specification](https://ualinkconsortium.org/wp-content/uploads/2025/04/UALink200_Specification_v1.0_Evaluation_Copy.pdf) - An open scale-up interconnect.
+- [Ultra Ethernet 1.0.3 Specification](https://ultraethernet.org/wp-content/uploads/sites/20/2026/08/UE-Specification-1.0.3.pdf) - The scale-out transport specification.
 
-- [The AI CUDA Engineer](https://sakana.ai/ai-cuda-engineer/) - Sakana AI. Evolutionary optimization, 10-100x speedups (with caveats about benchmark gaming)
-- [AlphaEvolve](https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/) - Google DeepMind. 32.5% FlashAttention speedup, 23% GEMM speedup
-- [Kevin: Multi-Turn RL for CUDA Kernels](https://arxiv.org/abs/2507.11948) - First multi-turn RL model, 82% correctness (vs 56% base)
-- [CUDA-L1: Contrastive RL for CUDA Optimization](https://arxiv.org/abs/2507.14111) - 3.12x average speedup on KernelBench
+### Mixture-of-experts serving
 
-### Research papers
+- [DeepSeek-V3](https://arxiv.org/html/2412.19437) - Routed experts, shared experts, and the model-system design.
+- [DeepEP](https://github.com/deepseek-ai/DeepEP) - Expert dispatch and combine kernels.
+- [EPLB](https://github.com/deepseek-ai/EPLB) - Expert placement and replication from measured load.
+- [MegaScale-Infer](https://arxiv.org/abs/2504.02263) - Large-scale MoE inference and communication overlap.
 
-#### Tier 3
+### Prefill and decode disaggregation
 
-- [EvoEngineer: Automated CUDA Kernel Evolution](https://arxiv.org/abs/2510.03760)
-- [QiMeng-Kernel: Macro-Thinking Micro-Coding for GPU Kernels](https://arxiv.org/abs/2511.20100)
-- [CUDA-LLM: LLMs Can Write Efficient CUDA Kernels](https://arxiv.org/abs/2506.09092)
-- [GEAK: Triton Kernel AI Agent](https://rocm.blogs.amd.com/software-tools-optimization/triton-kernel-ai/README.html) - AMD ROCm. 51% accuracy, 1.81x speedup on MI300X
+- [DistServe](https://arxiv.org/html/2401.09670) - Separate prefill and decode workers optimized for goodput under latency constraints.
+- [Splitwise](https://www.microsoft.com/en-us/research/publication/splitwise-efficient-generative-llm-inference-using-phase-splitting/) - Phase-specific allocation and scheduling.
+- [Mooncake](https://www.usenix.org/conference/fast25/presentation/qin) - KV-centric disaggregated inference.
+- [NIXL](https://github.com/ai-dynamo/nixl) - A transport layer for moving inference state across memory and network backends.
+- [Dynamo disaggregated serving](https://docs.nvidia.com/dynamo/design-docs/disaggregated-serving.md) - A current production implementation.
 
-## Distributed & Multi-GPU
+### Production systems
 
-### Communication primitives
+- [Clockwork](https://www.usenix.org/conference/osdi20/presentation/gujarati) - Predictable model serving through centralized scheduling.
+- [ServerlessLLM](https://www.usenix.org/conference/osdi24/presentation/fu) - Faster model startup and live migration.
+- [Gateway API Inference Extension](https://gateway-api-inference-extension.sigs.k8s.io/) - Model, accelerator, and KV-aware request routing.
+- [llm-d](https://github.com/llm-d/llm-d) - Distributed routing, scheduling, and disaggregated serving on Kubernetes.
 
-#### Tier 1
+### Serving benchmarks
 
-- [NVIDIA NCCL](https://github.com/NVIDIA/nccl) - Collective communication: all-reduce, all-gather, broadcast
-- [Fast Multi-GPU Collectives with NCCL](https://developer.nvidia.com/blog/fast-multi-gpu-collectives-nccl/) - NVIDIA. Ring, tree algorithms, topology-aware optimization
-- [Demystifying NCCL](https://arxiv.org/abs/2507.04786) - In-depth analysis of GPU communication protocols
-- [Collective Communication for 100k+ GPUs](https://arxiv.org/abs/2510.20171) - Meta NCCLX. Scaling to massive clusters
+- [MLPerf Inference](https://www.cs.toronto.edu/ecosystem/papers/ISCA_20/MLPerf%20Inference.pdf) - Reproducible benchmark scenarios and load generation.
+- [Etalon](https://arxiv.org/html/2407.07000) - Goodput under per-request latency SLOs.
+- [ServeGen](https://www.usenix.org/system/files/nsdi26-xiang-servegen.pdf) - Workload generation that preserves important production-trace properties.
+- [BurstGPT](https://github.com/HPMLL/BurstGPT) - A public trace for bursty LLM workloads.
+- [MLPerf Endpoints](https://mlcommons.org/benchmarks/endpoints/) - An endpoint-level benchmark for interactive generative AI.
 
-### Parallelism strategies
+## 6. Current hardware
 
-#### Tier 2
+Read each architecture with its ISA or tuning guide. Vendor peak numbers are not performance measurements.
 
-- [Megatron-LM: Training Multi-Billion Parameter Models](https://arxiv.org/abs/1909.08053) - NVIDIA. Tensor parallelism, pipeline parallelism
-- [Megatron-LM](https://github.com/NVIDIA/Megatron-LM) - Up to 47% MFU on H100 clusters
-- [Large Scale Tensor Parallel Training](https://docs.pytorch.org/tutorials/intermediate/TP_tutorial.html) - PyTorch Tutorial. Native TP support in PyTorch
-- [Horovod](https://github.com/horovod/horovod) - Ring-allreduce distributed training, 90% scaling efficiency
+### NVIDIA
 
-### Kernel fusion
+- [Blackwell architecture brief](https://resources.nvidia.com/en-us-blackwell-architecture/blackwell-architecture-technical-brief) - Blackwell and Blackwell Ultra system architecture.
+- [Blackwell Tuning Guide](https://docs.nvidia.com/cuda/blackwell-tuning-guide/) - Programming and optimization guidance.
+- [CUTLASS Blackwell documentation](https://docs.nvidia.com/cutlass/latest/media/docs/cpp/blackwell.html) - Blackwell matrix multiply and data-movement support.
 
-#### Tier 3
+### AMD
 
-- [Kernel Fusion in CUDA](https://www.vrushankdes.ai/diffusion-policy-inference-optimization/part-vi---kernel-fusion-in-cuda) - vrushankdes.ai. Vertical vs horizontal fusion, U-Net optimization
-- [Automatic Horizontal Fusion for GPU Kernels](https://www.cs.toronto.edu/ecosystem/papers/CGO_22/Horizontal_Fusion.pdf) - CMU. 12-55% speedup via parallel kernel execution
+- [CDNA 4 architecture whitepaper](https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/white-papers/amd-cdna-4-architecture-whitepaper.pdf) - MI350 compute, memory, and chiplet architecture.
+- [CDNA 4 instruction set](https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/instruction-set-architectures/amd-instinct-cdna4-instruction-set-architecture.pdf) - The native machine instruction reference.
+- [MI350 performance counters](https://rocm.docs.amd.com/en/latest/reference/gpu-arch/mi350-performance-counters.html) - Counter definitions and measurement guidance.
 
-## The Big Picture
+### Google TPU
 
-### Practitioner blogs
+- [TPU v1 analysis](https://research.google/pubs/in-datacenter-performance-analysis-of-a-tensor-processing-unit/) - The original datacenter TPU paper.
+- [TPU v4](https://arxiv.org/abs/2304.01433) - The TPU v4 chip, interconnect, and system.
+- [Ironwood documentation](https://docs.cloud.google.com/tpu/docs/tpu7x) - Current TPU v7 architecture and configuration.
+- [Pallas TPU hardware model](https://docs.jax.dev/en/latest/pallas/tpu/hardware.html) - The TPU execution and memory model for kernel authors.
 
-- [Michal Pitr - From Scratch](https://michalpitr.substack.com) - GPU programming, inference optimization
-- [cudaforfun Substack](https://cudaforfun.substack.com) - cuBLAS-level kernel development
-- [Lei Mao's Log Book](https://leimao.github.io) - CUTLASS, CUDA optimization deep dives
-- [Aleksa Gordić's Blog](https://www.aleksagordic.com/blog) - Ex-DeepMind, GPU architecture and matmul
+### AWS Trainium
 
-### Communities
+- [Trainium and Inferentia2 architecture](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/nki/guides/architecture/trainium_inferentia2_arch.html) - NeuronCore v2 compute and memory architecture.
+- [Trainium3 architecture](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/nki/guides/architecture/trainium3_arch.html) - The current NeuronCore architecture.
+- [NKI performance guide](https://awsdocs-neuron.readthedocs-hosted.com/en/v2.24.0/general/nki/nki_perf_guide.html) - Kernel optimization for Trainium and Inferentia.
 
-- [GPU Mode Discord](https://discord.gg/gpumode) - 23k+ members, weekly lectures, kernel leaderboard
-- [GPU Mode Resource Stream](https://github.com/gpu-mode/resource-stream) - Curated CUDA/GPU learning materials
+## Frontier
 
-## Contributing
+Verified on **2026-08-23**. This section is kept separate from the core list because the evidence changes quickly.
 
-Contributions welcome! Please ensure resources meet our quality criteria:
-- Primary sources (papers, official docs)
-- Practitioner blogs with real implementation insights
-- Active maintenance or timeless fundamentals
-- No surface-level tutorials
-- No AI-generated content without human verification
+### AI-generated kernels
+
+- [KernelBench](https://proceedings.mlr.press/v267/ouyang25a.html) - The original benchmark for converting PyTorch operators into faster GPU kernels.
+- [KernelBench-Verified](https://arxiv.org/html/2607.16241) - Stronger correctness tests and baseline parity.
+- [SOL-ExecBench](https://github.com/nvidia/sol-execbench) - Correctness and performance measured against a hardware speed-of-light model.
+
+### Watchlist
+
+- [NVIDIA Rubin](https://developer.nvidia.com/blog/inside-nvidia-rubin-gpu-architecture-powering-the-era-of-agentic-ai/) and Rubin CPX, pending shipped systems and reproducible measurements.
+- AMD MI400, CDNA 5, and Helios, pending architecture and ISA documents.
+- Session-aware and agentic scheduling against public production traces.
+- Real-time voice and video serving with complete quality and latency metrics.
+- Inference ASICs, processing in memory, analog compute, and photonic compute with reproducible deployments.
+- Individual AI kernel agents that have not been rerun on a hardened evaluator.
+
+## Source policy
+
+A core source must be one of the following:
+
+- the paper that introduced the mechanism;
+- the specification or official documentation that defines it;
+- the repository that implements it;
+- a direct implementer report with code, measurements, and enough detail to reproduce the result.
+
+Performance claims need the hardware, workload, precision, baseline, and correctness method. Otherwise the number is omitted.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) before proposing a resource.
 
 ## License
 

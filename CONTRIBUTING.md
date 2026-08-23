@@ -1,124 +1,45 @@
-# Contributing to GPU Performance Engineering Guide
+# Contributing
 
-Thank you for your interest in contributing! This guide aims to be the most comprehensive resource for GPU kernel programming in AI infrastructure.
+This is a learning path, not a link collection. A new resource must make the path clearer or more complete.
 
-## Quality Criteria
+## Before opening a pull request
 
-All submissions must meet these criteria:
+Answer four questions:
 
-### Must Have
-- **Primary sources preferred** - Papers, official documentation, or direct practitioner experience
-- **Real implementation insights** - Not just conceptual overviews
-- **Verified accuracy** - Links must work, claims must be accurate
-- **Unique value** - Resource adds something not already covered
+1. What mechanism or axiom does this source teach?
+2. Why is it a primary source?
+3. Where does it belong in the dependency order?
+4. Which existing source does it replace, if the section already has five links?
 
-### Red Flags (Likely Rejection)
-- Surface-level "intro to CUDA" tutorials
-- AI-generated content without significant human verification
-- Marketing content disguised as technical resources
-- Outdated resources (unless historically significant)
-- Broken links or paywalled content without clear notation
+Primary means one of the following:
 
-## How to Contribute
+- the paper that introduced the mechanism;
+- an official specification or reference;
+- the repository that implements it;
+- a direct implementer report with code, measurements, and enough detail to reproduce the result.
 
-### Adding a Resource
+Do not submit summaries, generic tutorials, marketing pages, broad surveys, or leaderboard claims without a hardened evaluator.
 
-1. **Fork the repository**
-2. **Determine the appropriate section and tier:**
-   - **Tier 1**: Essential starting points everyone should know
-   - **Tier 2**: Important deep dives and advanced topics
-   - **Tier 3**: Specialized or cutting-edge material
+## Performance claims
 
-3. **Use the correct format:**
-   ```markdown
-   📝 **Title** - Author/Source
-   - [link.com](https://link.com)
-   - Brief description (1-2 lines, focus on unique value)
-   ```
+A performance number needs:
 
-4. **Add appropriate tags:**
-   - `🔥` - Community favorite / highly recommended
-   - `✨` - Recently added (within last 6 months)
-   - `📄` - Academic paper
-   - `📝` - Blog post or tutorial
-   - `🎥` - Video content
-   - `📚` - Book
-   - `💻` - Code repository
+- hardware and software versions;
+- workload shapes or request distribution;
+- precision and algorithm;
+- baseline;
+- correctness method.
 
-5. **Submit a pull request** with:
-   - Clear title: "Add [Resource Name] to [Section]"
-   - Brief justification for why this resource is valuable
-   - Your assessment of which tier it belongs in
+If any item is missing, omit the number.
 
-### Updating Existing Resources
+## Frontier entries
 
-- Fix broken links
-- Update descriptions if resources have changed significantly
-- Suggest tier changes with justification
+Frontier items are dated. They enter the core path only when a technical specification or original paper, a shipped implementation, and reproducible measurement exist.
 
-### Reporting Issues
+## Pull request format
 
-- Broken links
-- Outdated information
-- Resources that no longer meet quality criteria
-- Missing important resources in a category
+Keep the description short. Include the source, the answers to the four questions above, and any conflict of interest.
 
-## Section-Specific Guidelines
+The automated checks reject broken internal anchors and accidental duplicate links. External links are checked separately because some primary sources block automated requests.
 
-### Fundamentals
-- Resources should be accessible to someone with basic programming knowledge
-- Prefer timeless concepts over version-specific details
-
-### Matrix Multiplication
-- Focus on optimization techniques that generalize
-- Include performance numbers when available
-
-### Tensor Cores & Mixed Precision
-- Keep up with latest architecture generations
-- Note hardware requirements clearly
-
-### Attention & Memory-Bound Kernels
-- Paper citations should include arxiv links
-- Note which architectures implementations target
-
-### Compiler & DSL Approaches
-- Include version/date information when relevant
-- Note API stability if applicable
-
-### Profiling & Optimization
-- Practical, actionable guidance preferred
-- Include tool versions when relevant
-
-### AMD & Alternative Hardware
-- Resources should be substantive, not just "we support X too"
-- Note specific hardware requirements
-
-### Production Inference Systems
-- Focus on architectural insights, not just "how to deploy"
-- Include performance characteristics
-
-### LLM-Generated Kernels
-- Note any caveats about benchmark gaming or limitations
-- Include reproducibility information
-
-### Distributed & Multi-GPU
-- Scale of validation matters (tested on N GPUs)
-- Note communication patterns and bottlenecks
-
-## Review Process
-
-1. Maintainers will review PRs within 1 week
-2. Discussion may occur in PR comments
-3. We may suggest alternative placement or tier
-4. Merged contributions will include ✨ tag initially
-
-## Code of Conduct
-
-- Be respectful and constructive
-- Focus on content quality, not author credentials
-- Acknowledge that "best" resources vary by learning style
-- Conflicts of interest (e.g., adding your own work) should be disclosed
-
-## Questions?
-
-Open an issue with the "question" label.
+Be direct and constructive. Discuss the content, not the author's credentials.
