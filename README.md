@@ -177,6 +177,7 @@ For a practical companion, use the [GPU Mode lectures](https://github.com/gpu-mo
 - [GPTQ](https://arxiv.org/abs/2210.17323) - One-shot second-order weight quantization.
 - [SmoothQuant](https://proceedings.mlr.press/v202/xiao23c.html) - W8A8 execution by moving quantization difficulty from activations into weights.
 - [AWQ](https://proceedings.mlsys.org/paper_files/paper/2024/file/42a452cbafa9dd64e9ba4aa95cc1ef21-Paper-Conference.pdf) - Low-bit weight-only inference with salient-weight protection.
+- [Introducing NVFP4 for Efficient and Accurate Low-Precision Inference](https://developer.nvidia.com/blog/introducing-nvfp4-for-efficient-and-accurate-low-precision-inference/) - Hardware-native 4-bit micro-block scaling for Blackwell inference.
 
 ### Speculative decoding
 
