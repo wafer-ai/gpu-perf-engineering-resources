@@ -96,7 +96,6 @@ For a practical companion, use the [GPU Mode lectures](https://github.com/gpu-mo
 ### Matrix multiplication
 
 - [Benchmarking GPUs to Tune Dense Linear Algebra](https://mc.stanford.edu/cgi-bin/images/6/65/SC08_Volkov_GPU.pdf) - The canonical case for reasoning from measured hardware behavior instead of occupancy alone.
-- [CuTe GEMM tutorial](https://docs.nvidia.com/cutlass/latest/media/docs/cpp/cute/0x_gemm_tutorial.html) - Tiling, layouts, copies, and matrix-multiply atoms.
 - [CUTLASS 3.x design](https://docs.nvidia.com/cutlass/latest/media/docs/cpp/cutlass_3x_design.html) - The collective and kernel structure used by modern CUTLASS.
 - [DeepGEMM](https://github.com/deepseek-ai/DeepGEMM) - A compact production FP8 GEMM implementation for Hopper.
 
@@ -133,7 +132,7 @@ For a practical companion, use the [GPU Mode lectures](https://github.com/gpu-mo
 ### CUTLASS, CuTe, and CUDA Tile
 
 - [CuTe layout algebra](https://docs.nvidia.com/cutlass/latest/media/docs/cpp/cute/02_layout_algebra.html) - Layouts and layout composition.
-- [CUTLASS GEMM tutorial](https://docs.nvidia.com/cutlass/latest/media/docs/cpp/cute/0x_gemm_tutorial.html) - A GEMM expressed through CuTe layouts and atoms.
+- [CuTe GEMM tutorial](https://docs.nvidia.com/cutlass/latest/media/docs/cpp/cute/0x_gemm_tutorial.html) - A GEMM expressed through CuTe layouts and atoms.
 - [CUTLASS pipeline documentation](https://docs.nvidia.com/cutlass/latest/media/docs/cpp/pipeline.html) - Producer-consumer pipelines and asynchronous stages.
 - [CUDA Tile IR programming model](https://docs.nvidia.com/cuda/tile-ir/latest/sections/prog_model.html) - NVIDIA's compiler-owned tile abstraction.
 - [CUDA Tile repository](https://github.com/NVIDIA/cuda-tile) - The current implementation and examples.
