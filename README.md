@@ -221,7 +221,7 @@ For a practical companion, use the [GPU Mode lectures](https://github.com/gpu-mo
 - [Splitwise](https://www.microsoft.com/en-us/research/publication/splitwise-efficient-generative-llm-inference-using-phase-splitting/) - Phase-specific allocation and scheduling.
 - [Mooncake](https://www.usenix.org/conference/fast25/presentation/qin) - KV-centric disaggregated inference.
 - [NIXL](https://github.com/ai-dynamo/nixl) - A transport layer for moving inference state across memory and network backends.
-- [Dynamo disaggregated serving](https://docs.nvidia.com/dynamo/design-docs/disaggregated-serving.md) - A current production implementation.
+- [Beyond the Buzz](https://arxiv.org/pdf/2506.05508v1) - A design space exploration of prefill decode disaggregation that also introduces system design principles like rate matching.
 
 ### Production systems
 
